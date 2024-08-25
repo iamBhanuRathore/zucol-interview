@@ -52,4 +52,9 @@ export const pfdArray: PdfArraySchema = [
     name: "Ninth",
     url: "https://www.meity.gov.in/writereaddata/files/JD_React%20JS%20Developer_2_0.pdf",
   },
+  {
+    id: 10,
+    name: "Tenth",
+    url: "https://www.pdf995.com/samples/pdf.pdf",
+  },
 ];

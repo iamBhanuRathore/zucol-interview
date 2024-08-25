@@ -100,7 +100,7 @@ const SingelPdf = () => {
 
     fetchPDF();
   }, [id]);
-
+  console.log("this");
   return (
     <div>
       {file ? (
