@@ -78,6 +78,7 @@ import { useParams } from "react-router-dom";
 // import { pfdArray } from "../lib/schema";
 import { useEffect, useState } from "react";
 import PdfRenderer from "./PdfRenderer.tsx"; // Import the PdfRenderer component
+import Loader from "./loader.tsx";
 
 const SingelPdf = () => {
   const { id } = useParams();
@@ -113,9 +114,7 @@ const SingelPdf = () => {
       {file ? (
         <PdfRenderer url={file} />
       ) : (
-        <div className="flex justify-center">
-          <p>Loading PDF...</p>
-        </div>
+        <Loader size={50} className="h-screen" />
       )}
     </div>
   );
