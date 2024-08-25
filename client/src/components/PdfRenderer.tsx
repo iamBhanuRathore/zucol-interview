@@ -281,6 +281,7 @@ import {
   ZoomOut,
 } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
+import { saveAs } from "file-saver"; // Add this import statement for file download
 
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -340,6 +341,9 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
   const handlePageSubmit = ({ page }: TCustomPageValidator) => {
     setCurrPage(Number(page));
     setValue("page", String(page));
+  };
+  const handleDownload = () => {
+    saveAs(url, "document.pdf"); // Trigger the download with a default file name
   };
 
   //   useEffect(() => {
@@ -454,6 +458,7 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
           <div>
             <Button
               variant="ghost"
+              onClick={handleDownload} // Add the onClick handler for download
               className="bg-white text-[#4a4dc7] rounded-full py-2 px-4 h-fit"
               aria-label="next page">
               <Download className="h-4 w-4" /> Download

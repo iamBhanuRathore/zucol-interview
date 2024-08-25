@@ -75,7 +75,7 @@
 // export default SingelPdf;
 
 import { useParams } from "react-router-dom";
-import { pfdArray } from "../lib/schema";
+// import { pfdArray } from "../lib/schema";
 import { useEffect, useState } from "react";
 import PdfRenderer from "./PdfRenderer.tsx"; // Import the PdfRenderer component
 
@@ -84,12 +84,19 @@ const SingelPdf = () => {
   const [file, setFile] = useState<string | null>(null);
 
   useEffect(() => {
-    const singlePdf = pfdArray.find((item) => item.id === Number(id));
-    if (!singlePdf) return;
+    // const singlePdf = pfdArray.find((item) => item.id === Number(id));
+    // if (!singlePdf) return;
 
     const fetchPDF = async () => {
       try {
-        const response = await fetch(singlePdf.url);
+        const response = await fetch(`http://localhost:3000/pdfs/${id}`, {
+          method: "GET",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch PDF");
+        }
+
         const blob = await response.blob();
         const fileURL = URL.createObjectURL(blob);
         setFile(fileURL);
