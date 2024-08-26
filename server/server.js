@@ -107,12 +107,10 @@ let pfdArray = [
 ];
 
 app.use(cors({ origin: "*" }));
-// Endpoint to get all PDFs metadata
 app.get("/pdfs", (req, res) => {
   res.json(pfdArray);
 });
 
-// Endpoint to get a single PDF by ID and return the PDF content
 app.get("/pdfs/:id", async (req, res) => {
   const pdfId = parseInt(req.params.id);
   const pdf = pfdArray.find((p) => p.id === pdfId);
