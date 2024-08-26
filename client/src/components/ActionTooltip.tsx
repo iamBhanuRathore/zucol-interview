@@ -25,7 +25,11 @@ export const ActionTooltip: React.FC<ActionTooltipProps> = ({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>{children}</TooltipTrigger>
-        <TooltipContent className={className} side={side} align={align}>
+        <TooltipContent
+          sideOffset={18}
+          className={className}
+          side={side}
+          align={align}>
           <p className="font-semibold text-sm capitalize">
             {label.toLowerCase()}
           </p>

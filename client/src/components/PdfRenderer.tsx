@@ -17,7 +17,7 @@ import { toast } from "sonner";
 
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { useEffect, useRef, useState } from "react";
+import { RefObject, useEffect, useMemo, useRef, useState } from "react";
 
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -47,6 +47,7 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
   const searchParams = new URLSearchParams(location.search);
   let pageNumber = Number(searchParams.get("pageNo")) || 1;
   const containerRef = useRef<HTMLDivElement>(null);
+
   let cachedBookmarks: BookMark[] = JSON.parse(
     localStorage.getItem("zucol-bookmarks") || "[]"
   );
@@ -67,12 +68,30 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
   });
 
   const toggleBookmark = (page: number) => {
-    toast("Event has been created.");
-
-    // setBookmarks((prev) =>
-    //   prev.includes(page) ? prev.filter((p) => p !== page) : [...prev, page]
-    // );
+    setBookmarks((obj) => {
+      let prev = [...obj];
+      const isAlreadyBookmarked = prev.findIndex(
+        (item) => item.pageNo === page && item.pdfId === Number(id)
+      );
+      console.log(isAlreadyBookmarked);
+      // If not Bookmarked
+      if (isAlreadyBookmarked === -1) {
+        prev.push({
+          pageNo: page,
+          pdfId: Number(id),
+        });
+        toast("Added to Bookmark");
+      } else {
+        prev = prev.filter(
+          (item) => !(item.pageNo === page && item.pdfId === Number(id))
+        );
+        toast("Removed from Bookmark");
+      }
+      localStorage.setItem("zucol-bookmarks", JSON.stringify(prev));
+      return prev;
+    });
   };
+
   type TCustomPageValidator = z.infer<typeof CustomPageValidator>;
 
   const {
@@ -92,6 +111,7 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
     if (pageNumber <= numPages!) {
       setCurrPage(pageNumber);
       setValue("page", String(pageNumber));
+      //   scrollToPage(pageNumber);
     }
   };
   const handleDownload = () => {
@@ -103,12 +123,11 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
         `.react-pdf__Page[data-page-number="${page}"]`
       );
       currentPageElement?.scrollIntoView({
-        behavior: "smooth",
+        behavior: "instant",
         block: "start",
       });
     }
   };
-
   useEffect(() => {
     if (!isLoading) {
       scrollToPage(currPage);
@@ -131,6 +150,37 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
   const handleZoomOut = () => {
     setScale((prevScale) => Math.max(prevScale - 0.25, 0.5));
   };
+  const isAlreadyBookmarked = bookmarks.some(
+    (item) => item.pageNo === currPage && item.pdfId === Number(id)
+  );
+  // Comment this then Our Zoom In / Zoom Out will work perfectly as they are supposed to work
+  useEffect(() => {
+    const handleScroll = () => {
+      const pageElements =
+        containerRef.current?.querySelectorAll(".react-pdf__Page");
+      if (pageElements) {
+        for (let i = 0; i < pageElements.length; i++) {
+          const pageElement = pageElements[i];
+          const rect = pageElement.getBoundingClientRect();
+          if (rect.y >= 0 && rect.top >= 0 && rect.top <= window.innerHeight) {
+            setCurrPage(i + 1);
+            console.log("In here", i);
+            setValue("page", String(i + 1));
+            break;
+          }
+          if (rect.top >= 0 && rect.bottom <= window.innerHeight) {
+            setCurrPage(i + 1);
+            setValue("page", String(i + 1));
+            break;
+          }
+        }
+      }
+    };
+    window?.addEventListener("scroll", handleScroll);
+    return () => {
+      window?.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   return (
     <div className="w-full bg-white relative rounded-md shadow flex flex-col items-center">
@@ -186,28 +236,7 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
         <button
           onClick={() => toggleBookmark(currPage)}
           aria-label="bookmark page">
-          {bookmarks.map((bookmark) => {
-            if (bookmark.pageNo === currPage && bookmark.pdfId === Number(id)) {
-              return (
-                <ActionTooltip
-                  label="Remove From Bookmark"
-                  align="center"
-                  side="top">
-                  <BookmarkMinus />
-                </ActionTooltip>
-              );
-            } else {
-              return (
-                <ActionTooltip
-                  label="Add To Bookmark"
-                  align="center"
-                  side="top">
-                  <Bookmark />
-                </ActionTooltip>
-              );
-            }
-          })}
-          {/* {bookmarks.includes(currPage) ? (
+          {isAlreadyBookmarked ? (
             <ActionTooltip
               label="Remove From Bookmark"
               align="center"
@@ -218,7 +247,7 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
             <ActionTooltip label="Add To Bookmark" align="center" side="top">
               <Bookmark />
             </ActionTooltip>
-          )} */}
+          )}
         </button>
         <div className="flex items-center gap-x-2">
           <div className="hidden md:flex px-2 border-white h-5 border-[3px] border-y-0 items-center gap-x-2">
@@ -252,16 +281,14 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
           </div>
         </div>
       </div>
-      <div className="flex-1 w-full overflow-auto" ref={containerRef}>
-        <div>
+      <div className="max-h-screen">
+        <div ref={containerRef}>
           <Document
             loading={<Loader />}
             onLoadError={() => {
-              //   toast({
-              //     title: "Error loading PDF",
-              //     description: "Please try again later",
-              //     variant: "destructive",
-              //   });
+              toast("Error loading PDF", {
+                description: "Please try again later",
+              });
             }}
             onLoadSuccess={({ numPages }) => setNumPages(numPages)}
             file={url}
@@ -274,12 +301,6 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
                   isLoading ? "border-0" : "border-[1px] border-zinc-700",
                   scale <= 1 ? "overflow-hidden" : "overflow-scroll"
                 )}>
-                {/* {isLoading && (
-                    <div className="flex justify-center items-center h-full">
-                      <Loader2 className="h-10 w-10 animate-spin" />
-                    </div>
-                  )}
-                  {!isLoading && ( */}
                 <Page
                   className={cn(isLoading ? "hidden" : "")}
                   width={window.innerWidth - 2 * 50}
@@ -289,7 +310,6 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
                   onRenderSuccess={() => setRenderedScale(scale)}
                   data-page-number={index + 1}
                 />
-                {/* )} */}
                 <p className="absolute right-0 top-0 w-10 h-10 border-2 rounded bg-[#4a4dc7] text-white flex justify-center items-center">
                   <span>{index + 1}</span>
                 </p>
