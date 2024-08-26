@@ -19,8 +19,8 @@ Before you begin, ensure you have the following installed on your machine:
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/your-repo/full-stack-app.git
-   cd full-stack-app
+   git clone https://github.com/iamBhanuRathore/zucol-interview.git
+   cd zucol-interview
    ```
 
 2. **Install client dependencies**:
